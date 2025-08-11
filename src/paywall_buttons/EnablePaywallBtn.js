@@ -6,7 +6,6 @@
 /*global chrome*/
 
 import React, { Component } from "react";
-import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -49,15 +48,15 @@ class EnablePaywallBtn extends Component {
   }
 
   togglePaywall = (checked) => {
-    var background = chrome.extension.getBackgroundPage() ;
+    var background = chrome.extension.getBackgroundPage();
     background.paywallEnabled = checked;
-    if(checked)
+    if (checked)
       this.addToBlacklist();
     else
       this.removeFromBlacklist();
-    
+
     this.setState(() => ({
-        enabled: checked,
+      enabled: checked,
     }))
   }
 
@@ -73,7 +72,7 @@ class EnablePaywallBtn extends Component {
         <Row>
           <Col xs={7} >
             <b>Bypass Paywalls</b><br></br>
-            <p style={{fontSize:"14px"}}>(On Site):</p>
+            <p style={{ fontSize: "14px" }}>(On Site):</p>
           </Col>
           <Col xs={5}>
             {enableBtn}

@@ -6,9 +6,12 @@ build() {
     echo 'exporting env variables'
     export INLINE_RUNTIME_CHUNK=false
     export GENERATE_SOURCEMAP=false
+    export NODE_OPTIONS=--openssl-legacy-provider
     echo 'building react'
 
-    react-scripts build
+    npx react-scripts build
+    echo 'generating rules'
+    node scripts/generate-rules.js
     echo 'file cleanup'
     mkdir -p dist
     cp -r build/* dist

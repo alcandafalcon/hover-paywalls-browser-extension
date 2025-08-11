@@ -1,0 +1,59 @@
+[
+    {
+        "id": 12144,
+        "priority": 2,
+        "action": {
+            "type": "modifyHeaders",
+            "requestHeaders": [
+                {
+                    "header": "Referer",
+                    "operation": "set",
+                    "value": "https://t.co/"
+                }
+            ]
+        },
+        "condition": {
+            "urlFilter": "*",
+            "resourceTypes": [
+                "main_frame"
+            ],
+            "excludedRequestDomains": [
+                "medium.com",
+                "towardsdatascience.com",
+                "glassdoor.com",
+                "bloomberg.com"
+            ]
+        }
+    },
+    {
+        "id": 12145,
+        "priority": 2,
+        "action": {
+            "type": "modifyHeaders",
+            "requestHeaders": [
+                {
+                    "header": "User-Agent",
+                    "operation": "set",
+                    "value": "Mozilla/5.0 AppleWebKit/537.36 (KHTML, like Gecko; compatible; Googlebot/2.1; +http://www.google.com/bot.html) Chrome/W.X.Y.Z‡ Safari/537.36"
+                },
+                {
+                    "header": "X-Forwarded-For",
+                    "operation": "set",
+                    "value": "66.249.66.1"
+                }
+            ]
+        },
+        "condition": {
+            "urlFilter": "*",
+            "resourceTypes": [
+                "main_frame"
+            ],
+            "excludedRequestDomains": [
+                "medium.com",
+                "towardsdatascience.com",
+                "glassdoor.com",
+                "bloomberg.com"
+            ]
+        }
+    }
+]

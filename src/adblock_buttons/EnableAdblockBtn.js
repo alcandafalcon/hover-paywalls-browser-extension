@@ -5,7 +5,6 @@
 /*global chrome*/
 
 import React, { Component } from "react";
-import Button from 'react-bootstrap/Button';
 import Container from 'react-bootstrap/Container';
 import Row from 'react-bootstrap/Row';
 import Col from 'react-bootstrap/Col';
@@ -25,12 +24,12 @@ class EnableAdblockBtn extends Component {
   toggleAdblock = (checked) => {
     var background = chrome.extension.getBackgroundPage()
     background.adblockEnabled = checked
-    if(checked)
+    if (checked)
       this.removeFromWhitelist();
     else
       this.addToWhitelist();
     this.setState(() => ({
-        enabled: checked
+      enabled: checked
     }))
     chrome.tabs.reload()
   }
@@ -71,11 +70,11 @@ class EnableAdblockBtn extends Component {
       <Container fluid>
         <Row>
           <Col xs={7} >
-          <b>Block Ads: </b><br></br>
-          <p style={{fontSize:"14px"}}>(On Site):</p>
+            <b>Block Ads: </b><br></br>
+            <p style={{ fontSize: "14px" }}>(On Site):</p>
           </Col>
           <Col xs={5}>
-            { enableBtn } 
+            {enableBtn}
           </Col>
         </Row>
       </Container>
