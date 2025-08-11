@@ -19,7 +19,8 @@
     "https://*/*"
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self' https://storage.googleapis.com; object-src 'self'"
+    "extension_pages": "script-src 'self'; object-src 'self'",
+    "sandbox": "sandbox allow-scripts; script-src 'self' 'unsafe-eval'; object-src 'self'"
   },
   "declarative_net_request": {
     "rule_resources": [
