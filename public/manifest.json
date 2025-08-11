@@ -18,6 +18,9 @@
     "http://*/*",
     "https://*/*"
   ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self' https://storage.googleapis.com; object-src 'self'"
+  },
   "declarative_net_request": {
     "rule_resources": [
       {
