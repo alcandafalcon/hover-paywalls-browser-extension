@@ -26,17 +26,35 @@ import './App.css';
 class App extends React.Component {
     constructor(props) {
         super(props);
+        this.state = {
+            blockedCount: 0,
+            paywallInCookieWhitelist: false,
+            paywallInSpoofWhitelist: false,
+            paywallInSMWhitelist: false,
+            paywallEnabled: false,
+            adblockEnabled: false
+        };
         this.rerenderParentCallback = this.rerenderParentCallback.bind(this);
     }
+
+    componentDidMount() {
+        chrome.runtime.sendMessage({ command: "getPopupState" }, (response) => {
+            this.setState({
+                blockedCount: response.blockedCount,
+                paywallInCookieWhitelist: response.paywallInCookieWhitelist,
+                paywallInSpoofWhitelist: response.paywallInSpoofWhitelist,
+                paywallInSMWhitelist: response.paywallInSMWhitelist,
+                paywallEnabled: response.paywallEnabled,
+                adblockEnabled: response.adblockEnabled
+            });
+        });
+    }
+
     rerenderParentCallback() {
-        this.forceUpdate();
+        this.componentDidMount();
     }
 
     render() {
-        var bg = chrome.runtime.getBackgroundPage();
-        if (!bg) {
-            return;
-        }
         return (
             <Container>
                 <div class="text-center">
@@ -59,8 +77,8 @@ class App extends React.Component {
                             <Card.Body>
                                 <ul class="list-group list-group-flush">
                                     <li class="list-group-item text-center">
-                                        <EnablePaywallBtn rerenderParentCallback={this.rerenderParentCallback}></EnablePaywallBtn>
-                                        <EnableAdblockBtn rerenderParentCallback={this.rerenderParentCallback}></EnableAdblockBtn>
+                                        <EnablePaywallBtn enabled={this.state.paywallEnabled} rerenderParentCallback={this.rerenderParentCallback}></EnablePaywallBtn>
+                                        <EnableAdblockBtn enabled={this.state.adblockEnabled} rerenderParentCallback={this.rerenderParentCallback}></EnableAdblockBtn>
                                     </li>
                                 </ul>
                             </Card.Body>
@@ -72,7 +90,7 @@ class App extends React.Component {
                         </Accordion.Toggle>
                         <Accordion.Collapse eventKey="0">
                             <Card.Body>
-                                <b>Total Items Blocked: <span style={{ color: "#31afb4" }}>{bg.blockedCount}</span> </b>
+                                <b>Total Items Blocked: <span style={{ color: "#31afb4" }}>{this.state.blockedCount}</span> </b>
                                 <p style={{ fontSize: "14px" }}>(Blocking Ads and Tracking Modules)</p>
                             </Card.Body>
                         </Accordion.Collapse>
@@ -84,9 +102,9 @@ class App extends React.Component {
                         <Accordion.Collapse eventKey="2">
                             <Card.Body>
                                 <ul class="list-group list-group-flush">
-                                    <li class="list-group-item text-center"><PaywallSMBtn rerenderParentCallback={this.rerenderParentCallback}></PaywallSMBtn></li>
-                                    <li class="list-group-item text-center"><PaywallSpoofBtn rerenderParentCallback={this.rerenderParentCallback}></PaywallSpoofBtn></li>
-                                    <li class="list-group-item text-center"><PaywallCookieBtn rerenderParentCallback={this.rerenderParentCallback}></PaywallCookieBtn></li>
+                                    <li class="list-group-item text-center"><PaywallSMBtn paywallEnabled={this.state.paywallEnabled} inWhitelist={this.state.paywallInSMWhitelist} rerenderParentCallback={this.rerenderParentCallback}></PaywallSMBtn></li>
+                                    <li class="list-group-item text-center"><PaywallSpoofBtn paywallEnabled={this.state.paywallEnabled} inWhitelist={this.state.paywallInSpoofWhitelist} rerenderParentCallback={this.rerenderParentCallback}></PaywallSpoofBtn></li>
+                                    <li class="list-group-item text-center"><PaywallCookieBtn paywallEnabled={this.state.paywallEnabled} inWhitelist={this.state.paywallInCookieWhitelist} rerenderParentCallback={this.rerenderParentCallback}></PaywallCookieBtn></li>
                                 </ul>
                             </Card.Body>
                         </Accordion.Collapse>

@@ -87,12 +87,13 @@ const paywallCookieBlocklist = [
     "wsj.net"
 ];
 
-chrome.tabs.onUpdated.addListener((tabId, changeInfo, tab) => {
+chrome.tabs.onUpdated.addListener(async (tabId, changeInfo, tab) => {
     if (changeInfo.status === 'complete' && tab.url) {
         const url = new URL(tab.url);
         const domain = url.hostname.replace(/^www\./, '');
+        const { cookieWhitelist = [] } = await chrome.storage.local.get("cookieWhitelist");
 
-        if (paywallCookieBlocklist.some(site => domain.includes(site))) {
+        if (paywallCookieBlocklist.some(site => domain.includes(site)) && !cookieWhitelist.includes(domain)) {
             chrome.scripting.executeScript({
                 target: { tabId: tabId },
                 function: clearCookies,
@@ -110,3 +111,141 @@ function clearCookies() {
         document.cookie = name + '=;expires=Thu, 01 Jan 1970 00:00:00 GMT;path=/';
     }
 }
+
+// Helper to get the current active tab
+async function getCurrentTab() {
+    let queryOptions = { active: true, currentWindow: true };
+    let [tab] = await chrome.tabs.query(queryOptions);
+    return tab;
+}
+
+// Helper to get root domain from a URL
+function getRootDomain(url) {
+    try {
+        return new URL(url).hostname.replace(/^www\./, '');
+    } catch (e) {
+        return '';
+    }
+}
+
+chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    (async () => {
+        if (request.command === "getPopupState") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+
+            const { paywallSettings = {} } = await chrome.storage.local.get("paywallSettings");
+            const { adblockWhitelist = [] } = await chrome.storage.local.get("adblockWhitelist");
+            const { cookieWhitelist = [] } = await chrome.storage.local.get("cookieWhitelist");
+            const { spoofWhitelist = [] } = await chrome.storage.local.get("spoofWhitelist");
+            const { smWhitelist = [] } = await chrome.storage.local.get("smWhitelist");
+            const { blockedCount = 0 } = await chrome.storage.local.get("blockedCount");
+
+            const paywallEnabled = paywallSettings[domain] !== false; // enabled by default
+            const adblockEnabled = !adblockWhitelist.includes(domain);
+            const paywallInCookieWhitelist = cookieWhitelist.includes(domain);
+            const paywallInSpoofWhitelist = spoofWhitelist.includes(domain);
+            const paywallInSMWhitelist = smWhitelist.includes(domain);
+
+            sendResponse({
+                blockedCount,
+                paywallInCookieWhitelist,
+                paywallInSpoofWhitelist,
+                paywallInSMWhitelist,
+                paywallEnabled,
+                adblockEnabled
+            });
+        } else if (request.command === "enablePaywall") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { paywallSettings = {} } = await chrome.storage.local.get("paywallSettings");
+            paywallSettings[domain] = true;
+            await chrome.storage.local.set({ paywallSettings });
+            sendResponse({ success: true });
+        } else if (request.command === "disablePaywall") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { paywallSettings = {} } = await chrome.storage.local.get("paywallSettings");
+            paywallSettings[domain] = false;
+            await chrome.storage.local.set({ paywallSettings });
+            sendResponse({ success: true });
+        } else if (request.command === "addToPaywallSpoofWhitelist") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { spoofWhitelist = [] } = await chrome.storage.local.get("spoofWhitelist");
+            if (!spoofWhitelist.includes(domain)) {
+                spoofWhitelist.push(domain);
+                await chrome.storage.local.set({ spoofWhitelist });
+            }
+            sendResponse({ success: true });
+        } else if (request.command === "removeFromPaywallSpoofWhitelist") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { spoofWhitelist = [] } = await chrome.storage.local.get("spoofWhitelist");
+            const index = spoofWhitelist.indexOf(domain);
+            if (index > -1) {
+                spoofWhitelist.splice(index, 1);
+                await chrome.storage.local.set({ spoofWhitelist });
+            }
+            sendResponse({ success: true });
+        } else if (request.command === "addToPaywallSMWhitelist") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { smWhitelist = [] } = await chrome.storage.local.get("smWhitelist");
+            if (!smWhitelist.includes(domain)) {
+                smWhitelist.push(domain);
+                await chrome.storage.local.set({ smWhitelist });
+            }
+            sendResponse({ success: true });
+        } else if (request.command === "removeFromPaywallSMWhitelist") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { smWhitelist = [] } = await chrome.storage.local.get("smWhitelist");
+            const index = smWhitelist.indexOf(domain);
+            if (index > -1) {
+                smWhitelist.splice(index, 1);
+                await chrome.storage.local.set({ smWhitelist });
+            }
+            sendResponse({ success: true });
+        } else if (request.command === "addToPaywallCookieWhitelist") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { cookieWhitelist = [] } = await chrome.storage.local.get("cookieWhitelist");
+            if (!cookieWhitelist.includes(domain)) {
+                cookieWhitelist.push(domain);
+                await chrome.storage.local.set({ cookieWhitelist });
+            }
+            sendResponse({ success: true });
+        } else if (request.command === "removeFromPaywallCookieWhitelist") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { cookieWhitelist = [] } = await chrome.storage.local.get("cookieWhitelist");
+            const index = cookieWhitelist.indexOf(domain);
+            if (index > -1) {
+                cookieWhitelist.splice(index, 1);
+                await chrome.storage.local.set({ cookieWhitelist });
+            }
+            sendResponse({ success: true });
+        } else if (request.command === "addToAdblockWhitelist") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { adblockWhitelist = [] } = await chrome.storage.local.get("adblockWhitelist");
+            if (!adblockWhitelist.includes(domain)) {
+                adblockWhitelist.push(domain);
+                await chrome.storage.local.set({ adblockWhitelist });
+            }
+            sendResponse({ success: true });
+        } else if (request.command === "removeFromAdblockWhitelist") {
+            const tab = await getCurrentTab();
+            const domain = getRootDomain(tab.url);
+            let { adblockWhitelist = [] } = await chrome.storage.local.get("adblockWhitelist");
+            const index = adblockWhitelist.indexOf(domain);
+            if (index > -1) {
+                adblockWhitelist.splice(index, 1);
+                await chrome.storage.local.set({ adblockWhitelist });
+            }
+            sendResponse({ success: true });
+        }
+    })();
+    return true; // Indicates that the response is sent asynchronously
+});
