@@ -13,59 +13,18 @@ import BootstrapSwitchButton from 'bootstrap-switch-button-react'
 class EnableAdblockBtn extends Component {
   constructor(props) {
     super(props);
-    this.addToWhitelist = this.addToWhitelist.bind(this);
-    this.removeFromWhitelist = this.removeFromWhitelist.bind(this);
-    this.state = {
-      enabled: chrome.extension.getBackgroundPage().adblockEnabled,
-      inWhitelist: chrome.extension.getBackgroundPage().adblockInWhitelist
-    };
+    this.toggleAdblock = this.toggleAdblock.bind(this);
   }
 
   toggleAdblock = (checked) => {
-    var background = chrome.extension.getBackgroundPage()
-    background.adblockEnabled = checked
-    if (checked)
-      this.removeFromWhitelist();
-    else
-      this.addToWhitelist();
-    this.setState(() => ({
-      enabled: checked
-    }))
-    chrome.tabs.reload()
-  }
-
-  addToWhitelist = () => {
-    let bg = chrome.extension.getBackgroundPage();
-    bg.getCurrentTabRoot(bg.addToAdblockWhitelist);
-    bg.adblockEnabled = false
-    bg.adblockInWhitelist = true
-    this.setState(() => ({
-      enabled: false,
-      inWhitelist: true
-    }))
-    this.props.rerenderParentCallback();
-    chrome.tabs.reload();
-  }
-
-  removeFromWhitelist = () => {
-    let bg = chrome.extension.getBackgroundPage();
-    bg.getCurrentTabRoot(bg.removeFromAdblockWhitelist);
-    bg.adblockEnabled = true
-    bg.adblockInWhitelist = false
-    this.setState(() => ({
-      enabled: true,
-      inWhitelist: false
-    }))
-    this.props.rerenderParentCallback();
-    chrome.tabs.reload();
+    const command = checked ? "removeFromAdblockWhitelist" : "addToAdblockWhitelist";
+    chrome.runtime.sendMessage({ command }, () => {
+      this.props.rerenderParentCallback();
+      chrome.tabs.reload();
+    });
   }
 
   render() {
-    let enableBtn;
-    let bg = chrome.extension.getBackgroundPage();
-    console.log("inWhitelist Adblock: " + bg.adblockInWhitelist)
-
-    enableBtn = <BootstrapSwitchButton onChange={this.toggleAdblock} checked={this.state.enabled} onlabel={'On '} offlabel={'Off'} width={65} onstyle="info" />
     return (
       <Container fluid>
         <Row>
@@ -74,7 +33,13 @@ class EnableAdblockBtn extends Component {
             <p style={{ fontSize: "14px" }}>(On Site):</p>
           </Col>
           <Col xs={5}>
-            {enableBtn}
+            <BootstrapSwitchButton
+              onChange={this.toggleAdblock}
+              checked={this.props.enabled}
+              onlabel={'On '}
+              offlabel={'Off'}
+              width={65}
+              onstyle="info" />
           </Col>
         </Row>
       </Container>

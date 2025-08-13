@@ -14,46 +14,34 @@ class PaywallSpoofBtn extends Component {
     super(props);
     this.removeFromSpoofWhitelist = this.removeFromSpoofWhitelist.bind(this);
     this.addToSpoofWhitelist = this.addToSpoofWhitelist.bind(this);
-    this.state = {
-      inSpoofWhitelist: chrome.extension.getBackgroundPage().paywallInSpoofWhitelist
-    };
   }
 
   addToSpoofWhitelist = () => {
-    let bg = chrome.extension.getBackgroundPage();
-    bg.getCurrentTabRoot(bg.addToPaywallSpoofWhitelist);
-    bg.paywallInSpoofWhitelist = true;
-    this.setState(() => ({
-      inSpoofWhitelist: true
-    }))
-    this.props.rerenderParentCallback();
+    chrome.runtime.sendMessage({ command: "addToPaywallSpoofWhitelist" }, () => {
+      this.props.rerenderParentCallback();
+    });
   }
 
   removeFromSpoofWhitelist = () => {
-    let bg = chrome.extension.getBackgroundPage();
-    bg.getCurrentTabRoot(bg.removeFromPaywallSpoofWhitelist);
-    bg.paywallInSpoofWhitelist = false;
-    this.setState((ps) => ({
-      inSpoofWhitelist: false
-    }))
-    this.props.rerenderParentCallback();
+    chrome.runtime.sendMessage({ command: "removeFromPaywallSpoofWhitelist" }, () => {
+      this.props.rerenderParentCallback();
+    });
   }
 
   render() {
     let listBtn;
-    let bg = chrome.extension.getBackgroundPage();
-    if(bg.paywallEnabled) {
-      if(this.state.inSpoofWhitelist)
-        listBtn = <Button onClick={this.removeFromSpoofWhitelist} variant="warning" style={{fontSize:"15px"}}>Spoof Site as Crawler</Button>
+    if (this.props.paywallEnabled) {
+      if (this.props.inWhitelist)
+        listBtn = <Button onClick={this.removeFromSpoofWhitelist} variant="warning" style={{ fontSize: "15px" }}>Spoof Site as Crawler</Button>
       else
-        listBtn = <Button onClick={this.addToSpoofWhitelist} variant="outline-info" style={{fontSize:"15px"}}>Unspoof Site as Crawler</Button>
+        listBtn = <Button onClick={this.addToSpoofWhitelist} variant="outline-info" style={{ fontSize: "15px" }}>Unspoof Site as Crawler</Button>
     }
     else {
-      listBtn = <Button onClick={this.addToSpoofWhitelist} variant="outline-info" style={{fontSize:"15px"}} disabled>Bypass Paywall Disabled On Site</Button>
+      listBtn = <Button onClick={this.addToSpoofWhitelist} variant="outline-info" style={{ fontSize: "15px" }} disabled>Bypass Paywall Disabled On Site</Button>
     }
     return (<div>
       {listBtn}
-      </div>
+    </div>
     );
   }
 }

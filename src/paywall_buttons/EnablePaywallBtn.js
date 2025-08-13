@@ -14,59 +14,18 @@ import BootstrapSwitchButton from 'bootstrap-switch-button-react'
 class EnablePaywallBtn extends Component {
   constructor(props) {
     super(props);
-    this.removeFromBlacklist = this.removeFromBlacklist.bind(this);
-    this.addToBlacklist = this.addToBlacklist.bind(this);
-    this.state = {
-      enabled: chrome.extension.getBackgroundPage().paywallEnabled,
-      inBlacklist: chrome.extension.getBackgroundPage().paywallInBlacklist
-    };
-  }
-
-  addToBlacklist = () => {
-    let bg = chrome.extension.getBackgroundPage();
-    bg.getCurrentTabRoot(bg.addToPaywallBlacklist);
-    bg.paywallInBlacklist = true;
-    bg.paywallEnabled = true;
-    this.setState(() => ({
-      enabled: true,
-      inBlacklist: true
-    }))
-    this.props.rerenderParentCallback();
-    chrome.tabs.reload();
-  }
-
-  removeFromBlacklist = () => {
-    let bg = chrome.extension.getBackgroundPage();
-    bg.getCurrentTabRoot(bg.removeFromPaywallBlacklist);
-    bg.paywallInBlacklist = false;
-    this.setState((ps) => ({
-      enabled: bg.paywallEnabled,
-      inBlacklist: false
-    }))
-    this.props.rerenderParentCallback();
-    chrome.tabs.reload();
+    this.togglePaywall = this.togglePaywall.bind(this);
   }
 
   togglePaywall = (checked) => {
-    var background = chrome.extension.getBackgroundPage();
-    background.paywallEnabled = checked;
-    if (checked)
-      this.addToBlacklist();
-    else
-      this.removeFromBlacklist();
-
-    this.setState(() => ({
-      enabled: checked,
-    }))
+    const command = checked ? "enablePaywall" : "disablePaywall";
+    chrome.runtime.sendMessage({ command }, () => {
+      this.props.rerenderParentCallback();
+      chrome.tabs.reload();
+    });
   }
 
   render() {
-    let enableBtn;
-    let bg = chrome.extension.getBackgroundPage();
-    console.log("Hover Enabled: " + bg.paywallEnabled)
-    let enabled = (bg.paywallEnabled)
-    enableBtn = <BootstrapSwitchButton onChange={this.togglePaywall} checked={enabled} onlabel={'On '} offlabel={'Off'} width={65} onstyle="info" />
-
     return (
       <Container fluid>
         <Row>
@@ -75,7 +34,13 @@ class EnablePaywallBtn extends Component {
             <p style={{ fontSize: "14px" }}>(On Site):</p>
           </Col>
           <Col xs={5}>
-            {enableBtn}
+            <BootstrapSwitchButton
+              onChange={this.togglePaywall}
+              checked={this.props.enabled}
+              onlabel={'On '}
+              offlabel={'Off'}
+              width={65}
+              onstyle="info" />
           </Col>
         </Row>
       </Container>

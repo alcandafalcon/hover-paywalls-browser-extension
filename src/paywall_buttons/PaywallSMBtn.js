@@ -14,46 +14,34 @@ class PaywallSMBtn extends Component {
     super(props);
     this.removeFromSMWhitelist = this.removeFromSMWhitelist.bind(this);
     this.addToSMWhitelist = this.addToSMWhitelist.bind(this);
-    this.state = {
-      inSMWhitelist: chrome.extension.getBackgroundPage().paywallInSMWhitelist
-    };
   }
 
   addToSMWhitelist = () => {
-    let bg = chrome.extension.getBackgroundPage();
-    bg.getCurrentTabRoot(bg.addToPaywallSMWhitelist);
-    bg.paywallInSMWhitelist = true;
-    this.setState(() => ({
-      inSMWhitelist: true
-    }))
-    this.props.rerenderParentCallback();
+    chrome.runtime.sendMessage({ command: "addToPaywallSMWhitelist" }, () => {
+      this.props.rerenderParentCallback();
+    });
   }
 
   removeFromSMWhitelist = () => {
-    let bg = chrome.extension.getBackgroundPage();
-    bg.getCurrentTabRoot(bg.removeFromPaywallSMWhitelist);
-    bg.paywallInSMWhitelist = false;
-    this.setState((ps) => ({
-      inSMWhitelist: false
-    }))
-    this.props.rerenderParentCallback();
+    chrome.runtime.sendMessage({ command: "removeFromPaywallSMWhitelist" }, () => {
+      this.props.rerenderParentCallback();
+    });
   }
 
   render() {
     let listBtn;
-    let bg = chrome.extension.getBackgroundPage();
-    if(bg.paywallEnabled) {
-      if(this.state.inSMWhitelist)
-        listBtn = <Button onClick={this.removeFromSMWhitelist} variant="warning" style={{fontSize:"15px"}}>Change Referrer Header</Button>
+    if (this.props.paywallEnabled) {
+      if (this.props.inWhitelist)
+        listBtn = <Button onClick={this.removeFromSMWhitelist} variant="warning" style={{ fontSize: "15px" }}>Change Referrer Header</Button>
       else
-        listBtn = <Button onClick={this.addToSMWhitelist} variant="outline-info" style={{fontSize:"15px"}}>Unchange Referrer Header</Button>
+        listBtn = <Button onClick={this.addToSMWhitelist} variant="outline-info" style={{ fontSize: "15px" }}>Unchange Referrer Header</Button>
     }
     else {
-      listBtn = <Button onClick={this.addToSMWhitelist} variant="outline-info" style={{fontSize:"15px"}} disabled>Bypass Paywall Disabled On Site</Button>
+      listBtn = <Button onClick={this.addToSMWhitelist} variant="outline-info" style={{ fontSize: "15px" }} disabled>Bypass Paywall Disabled On Site</Button>
     }
     return (<div>
       {listBtn}
-      </div>
+    </div>
     );
   }
 }
